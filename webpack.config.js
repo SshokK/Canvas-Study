@@ -6,6 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const config = {
   entry: [path.resolve(__dirname, 'src/js/index.js')],
   output: {
+    publicPath: '/',
     path: path.resolve(__dirname, 'build'),
     filename: '[name].[contenthash].js',
     chunkFilename: '[name].[contenthash].js'
@@ -18,7 +19,7 @@ const config = {
   ],
   devServer: {
     publicPath: '/',
-    contentBase: path.join(__dirname, 'build'),
+    contentBase: path.join(__dirname, '/src'),
     port: 9000
   },
   module: {
@@ -37,6 +38,39 @@ const config = {
             ]
           }
         }
+      },
+      {
+        test: /\.(png|jpe?g|gif)$/,
+        include: [
+          path.resolve(__dirname, 'src/static/sprites'),
+        ],
+        use: [
+          {
+            loader: 'url-loader'
+          },
+          {
+            loader: 'image-webpack-loader',
+            options: {
+              mozjpeg: {
+                progressive: true,
+                quality: 65
+              },
+              optipng: {
+                enabled: false
+              },
+              pngquant: {
+                quality: [0.65, 0.9],
+                speed: 4
+              },
+              gifsicle: {
+                interlaced: false
+              },
+              webp: {
+                quality: 75
+              }
+            }
+          }
+        ]
       },
     ]
   },
@@ -62,8 +96,10 @@ const config = {
     }
   },
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.js'],
     alias: {
+      Sprites: path.resolve(__dirname, 'src/static/sprites'),
+      Utils: path.resolve(__dirname, 'src/js/utils'),
       '~': path.resolve(__dirname, 'src')
     }
   }
