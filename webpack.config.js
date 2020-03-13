@@ -1,6 +1,5 @@
 const path = require('path')
 
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const config = {
@@ -12,14 +11,13 @@ const config = {
     chunkFilename: '[name].[contenthash].js'
   },
   plugins: [
-    new BundleAnalyzerPlugin(),
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, 'src/static/template.html')
     })
   ],
   devServer: {
     publicPath: '/',
-    contentBase: path.join(__dirname, '/src'),
+    contentBase: path.join(__dirname, '/build'),
     port: 9000
   },
   module: {
@@ -30,7 +28,7 @@ const config = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env'],
+            presets: ['@babel/preset-env', "@babel/preset-react"],
             plugins: [
               '@babel/plugin-proposal-export-default-from',
               '@babel/plugin-proposal-object-rest-spread',
@@ -40,38 +38,51 @@ const config = {
         }
       },
       {
+        test: /\.svg/,
+        include: [
+          path.resolve(__dirname, 'src/static/icons'),
+        ],
+        use: 'svg-inline-loader'
+      },
+      {
         test: /\.(png|jpe?g|gif)$/,
         include: [
-          path.resolve(__dirname, 'src/static/sprites'),
+          path.resolve(__dirname, 'src/static/icons'),
         ],
         use: [
           {
-            loader: 'url-loader'
+            loader: 'file-loader'
+          },
+        ]
+      },
+      {
+        test: /\.scss$/,
+        include: [path.resolve(__dirname, "src/js"), path.resolve(__dirname, "src/css")],
+        use: [
+          {
+            loader: 'style-loader'
           },
           {
-            loader: 'image-webpack-loader',
+            loader: "css-loader",
             options: {
-              mozjpeg: {
-                progressive: true,
-                quality: 65
-              },
-              optipng: {
-                enabled: false
-              },
-              pngquant: {
-                quality: [0.65, 0.9],
-                speed: 4
-              },
-              gifsicle: {
-                interlaced: false
-              },
-              webp: {
-                quality: 75
+              modules: {
+                localIdentName: "[name]__[local]--[hash:base64:5]"
               }
             }
+          },
+          {
+            loader: "sass-loader"
           }
         ]
       },
+      {
+        test: /\.css$/,
+        include: [path.resolve(__dirname, "src/js"), path.resolve(__dirname, "src/css")],
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      }
     ]
   },
   optimization: {
@@ -98,8 +109,11 @@ const config = {
   resolve: {
     extensions: ['.js'],
     alias: {
-      Sprites: path.resolve(__dirname, 'src/static/sprites'),
+      Components: path.resolve(__dirname, 'src/js/components'),
+      Actions: path.resolve(__dirname, 'src/js/actions'),
+      Reducers: path.resolve(__dirname, 'src/js/reducers'),
       Utils: path.resolve(__dirname, 'src/js/utils'),
+      Icons: path.resolve(__dirname, 'src/static/icons'),
       '~': path.resolve(__dirname, 'src')
     }
   }

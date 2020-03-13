@@ -1,19 +1,13 @@
-import * as PIXI from 'pixi.js'
-import Dyno from 'Sprites/test.png'
-import { getSprite, loadSprite } from 'Utils/sprites-helpers'
+import React from 'react'
+import { render } from 'react-dom'
+import App from 'Components/App/App'
+import './index.css'
+import { Provider } from 'react-redux'
+import store from './store'
 
-let app = new PIXI.Application({
-    width: 256,
-    height: 256,
-    antialias: true,
-    transparent: false,
-    resolution: 1
-  }
+render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("root")
 );
-
-document.getElementById('root').appendChild(app.view);
-
-loadSprite(Dyno, (sprite) => {
-  let Dyno = getSprite(sprite)
-  app.stage.addChild(Dyno);
-})
