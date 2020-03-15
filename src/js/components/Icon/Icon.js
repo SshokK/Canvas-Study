@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
+import pt from 'prop-types'
 import { Path, Group } from 'react-konva'
 import ManualIconSvg from 'Icons/manual.svg';
 import ApiIconSvg from 'Icons/api.svg';
@@ -17,6 +18,8 @@ export const ICON_TYPE = {
 const Icon = (props) => {
   const iconRef = useRef(null)
   const {
+    offsetX,
+    offsetY,
     iconType,
     verticalAlign,
     horizontalAlign,
@@ -27,18 +30,18 @@ const Icon = (props) => {
   useEffect(() => setInitialPosition(), [])
 
   const setInitialPosition = () => {
-    const { width: parentWidth, height: parentHeight } = iconRef.current.parent.getClientRect()
-    const [x, y] = getIconCoords(parentWidth, parentHeight)
-    iconRef.current.to({
-      x,
-      y
-    })
+    if (iconRef.current) {
+      const { width: parentWidth, height: parentHeight } = iconRef.current.parent.getClientRect()
+      const [x, y] = getIconCoords(parentWidth, parentHeight)
+      iconRef.current.to({
+        x: x + offsetX,
+        y: y + offsetY
+      })
+    }
   }
 
   const getIconCoords = (parentWidth, parentHeight) => {
     const { width, height } = iconRef.current.getClientRect()
-
-    console.log(width)
 
     let x = 0;
     let y = 0;
@@ -51,17 +54,13 @@ const Icon = (props) => {
       x = parentWidth - width
     }
 
-    if (verticalAlign === 'center') {
+    if (verticalAlign === 'middle') {
       y = (parentHeight / 2) - (height / 2)
     }
 
-    if (horizontalAlign === 'bottom') {
+    if (verticalAlign === 'bottom') {
       y = parentHeight - height
     }
-
-    console.log(x, y)
-
-    console.log(parentWidth, parentHeight, width, height)
 
     return [x, y]
   }
@@ -97,3 +96,23 @@ const Icon = (props) => {
 }
 
 export default Icon
+
+Icon.propTypes = {
+  offsetX: pt.number,
+  offsetY: pt.number,
+  iconType: pt.oneOf([...Object.values(ICON_TYPE)]),
+  horizontalAlign: pt.oneOf(['left', 'center', 'right']),
+  verticalAlign: pt.oneOf(['top', 'middle', 'bottom']),
+  onMouseEnter: pt.func,
+  onMouseLeave: pt.func
+}
+
+Icon.defaultProps = {
+  offsetX: 0,
+  offsetY: 0,
+  iconType: "",
+  horizontalAlign: 'left',
+  verticalAlign: "top",
+  onMouseEnter: () => {},
+  onMouseLeave: () => {}
+}

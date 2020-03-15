@@ -1,22 +1,55 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Layer, Stage } from 'react-konva'
 import Link from 'Components/Link/Link'
 import DebugGrid from 'Components/DebugGrid/DebugGrid'
 import TasksMenu from 'Components/TasksMenu/TasksMenu'
 import ZoomButtons from 'Components/ZoomButtons/ZoomButtons'
+import Node from 'Components/Node/Node'
 import styles from './App.scss'
 
 const TASKS_MENU_COORDS = [30, 150]
 const ZOOM_BUTTONS_COORDS = [30, 800]
 const SPACE_BETWEEN_GRID_LINES = 50
+const ESC_KEY_CODE = 27
 
 const App = () => {
   const [nodes, changeNodes] = useState([])
   const [nodesLinks, changeNodesLinks] = useState([])
+  const [clickedAnchorCoords, changeClickedAnchorCoords] = useState([])
   const [zoomLevel, changeZoomLevel] = useState(1)
+  const [mousePosition, changeMousePosition] = useState([])
 
   const stageWidth = window.innerWidth
   const stageHeight = window.innerHeight
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyPress)
+    return () => document.addEventListener("keydown", handleKeyPress)
+  }, [])
+
+  const handleKeyPress = (e) => {
+    // Unselect clicked anchor
+    if (e.keyCode === ESC_KEY_CODE) {
+      changeClickedAnchorCoords([])
+    }
+  }
+
+  const handleAnchorClick = (anchorCoords) => {
+    if (clickedAnchorCoords.length) {
+
+      // Unselect if the same anchor was clicked
+      if (anchorCoords[0] === clickedAnchorCoords[0] && anchorCoords[1] === clickedAnchorCoords[1]) {
+        changeClickedAnchorCoords([])
+      }
+
+      changeNodesLinks([...nodesLinks, <Link points={[...clickedAnchorCoords, ...anchorCoords]}/>])
+      changeClickedAnchorCoords([])
+    } else {
+      changeClickedAnchorCoords(anchorCoords)
+    }
+  }
+
+  const handleMouseMove = (e) => changeMousePosition([e.evt.clientX, e.evt.clientY])
 
   const renderDebugGrid = () => {
     return (
@@ -30,11 +63,11 @@ const App = () => {
 
   const renderNodes = () => {
     return (
-      nodes.map((Element, i) => (
-        <Element
-          key={i}
-          handleNodeSelection={(node) => changeNodes([...nodes, node])}
-          handleLinkSelection={(link) => changeNodesLinks([...nodesLinks, link])}
+      nodes.map((nodeType, i) => (
+        <Node
+          onAnchorClick={handleAnchorClick}
+          nodeLabel={'Node label'}
+          iconType={nodeType}
         />
       ))
     )
@@ -42,7 +75,7 @@ const App = () => {
 
   const renderNodesLinks = () => {
     return (
-      nodesLinks.map((Link, i) => <Link key={i}/>)
+      nodesLinks.map((Link, i) => Link)
     )
   }
 
@@ -50,6 +83,7 @@ const App = () => {
     return (
       <>
         <TasksMenu
+          onTaskTypeClick={(node) => changeNodes([...nodes, node])}
           x={TASKS_MENU_COORDS[0]}
           y={TASKS_MENU_COORDS[1]}
         />
@@ -63,19 +97,32 @@ const App = () => {
     )
   }
 
+  const renderTemporalLink = () => {
+    if (mousePosition.length && clickedAnchorCoords.length) {
+      return (
+        <Link
+          isTemporal
+          points={[...clickedAnchorCoords, ...mousePosition]}
+        />
+      )
+    }
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.stage_wrapper}>
         <Stage
           width={stageWidth}
           height={stageHeight}
+          onMouseMove={handleMouseMove}
         >
           <Layer>
             {renderDebugGrid()}
           </Layer>
           <Layer scaleX={zoomLevel} scaleY={zoomLevel}>
-            {renderNodes()}
             {renderNodesLinks()}
+            {renderNodes()}
+            {renderTemporalLink()}
           </Layer>
           <Layer>
             {renderMenus()}

@@ -67,6 +67,7 @@ const TasksMenu = (props) => {
   const {
     x,
     y,
+    onTaskTypeClick,
     ...otherProps
   } = props
 
@@ -92,13 +93,8 @@ const TasksMenu = (props) => {
           x={-13}
           width={TASK_CLICKABLE_AREA_WIDTH}
           height={TASK_CLICKABLE_AREA_HEIGHT}
+          onClick={() => onTaskTypeClick(type)}
           opacity={0}
-        />
-
-        <Node
-          y={y}
-          nodeLabel={'Node label'}
-          iconType={type}
         />
       </Group>
     )

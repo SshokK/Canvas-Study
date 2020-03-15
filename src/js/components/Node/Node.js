@@ -1,10 +1,11 @@
-import React, {  useRef } from 'react'
+import React, {  useRef, useState } from 'react'
 import Konva from 'konva'
-import { Rect, Group, Text } from 'react-konva'
+import { Rect, Group, Text, Circle } from 'react-konva'
 import NodeAnchor from 'Components/Node/NodeAnchor'
 import { color } from 'Utils/color-helpers'
 import { setCursor } from 'Utils/dom-helpers'
 import Icon from 'Components/Icon/Icon'
+import Link from 'Components/Link/Link'
 
 const NODE_MOUSE_DOWN_ANIMATION = {
   duration: 0.1,
@@ -23,7 +24,7 @@ const NODE_ANCHOR_WIDTH = 10
 const NODE_ANCHOR_HEIGHT = 10
 const NODE_WIDTH = 100
 const NODE_HEIGHT = 100
-const NODE_BOTTOM_LINE_HEIGHT = 15
+const NODE_BOTTOM_LINE_HEIGHT = 10
 const NODE_LABEL_FONT_FAMILY = 'Calibri'
 const NODE_LABEL_FONT_SIZE = 16
 
@@ -31,45 +32,72 @@ const Node = (props) => {
   const groupRef = useRef(null)
   const rectRef = useRef(null)
   const rectBottomLineRef = useRef(null)
+  const [areAnchorsVisible, makeAnchorsVisible] = useState(false)
+
   const {
     x,
     y,
     iconType,
+    onAnchorClick,
     nodeLabel
   } = props
 
   const handleMouseEnter = () => {
     setCursor('grab')
+    makeAnchorsVisible(true)
   }
 
   const handleMouseLeave = () => {
     setCursor('default')
+    makeAnchorsVisible(false)
   }
 
   const handleMouseDown = (e) => {
     setCursor('grabbing')
-    groupRef.current.to({
+    /* groupRef.current.to({
       ...NODE_MOUSE_DOWN_ANIMATION
-    });
+    }); */
   }
 
   const handleMouseUp = (e) => {
     setCursor('grab')
-    groupRef.current.to({
+    /* groupRef.current.to({
       ...NODE_MOUSE_UP_ANIMATION
-    });
+    }); */
   }
 
-  const getCoordsToCenterIcon = (iconWidth, iconHeight) => {
-    const axisXCenter = NODE_WIDTH / 2
-    const axisYCenter = NODE_HEIGHT / 2
-
-    const iconX = axisXCenter - iconWidth / 2
-    const iconY = axisYCenter - iconHeight / 2
-
-    return [iconX, iconY]
+  const handleAnchorClick = (anchorCoords) => {
+    console.log('clicked')
+    onAnchorClick(anchorCoords)
   }
 
+  const renderAnchor = (key, offsetX, offsetY) => {
+    return (
+      <NodeAnchor
+        key={key}
+        x={offsetX}
+        y={offsetY}
+        width={NODE_ANCHOR_WIDTH}
+        height={NODE_ANCHOR_HEIGHT}
+        color={color.white}
+        borderColor={color.darkGray}
+        onClick={handleAnchorClick}
+      />
+    )
+  }
+
+  const renderAnchors = () => {
+    if (areAnchorsVisible) {
+      return (
+        <>
+          {renderAnchor('top', getXCenterOfNode(), 0)}
+          {renderAnchor('bottom', getXCenterOfNode(), NODE_HEIGHT - 5)}
+          {renderAnchor('right', NODE_WIDTH, getYCenterOfNode())}
+          {renderAnchor('left', 0, getYCenterOfNode())}
+        </>
+      )
+    }
+  }
 
   return (
     <Group
@@ -82,24 +110,27 @@ const Node = (props) => {
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
     >
+
       {/* Node body */}
+      <Group>
+        <Rect
+          ref={rectRef}
+          width={NODE_WIDTH}
+          height={NODE_HEIGHT - NODE_BOTTOM_LINE_HEIGHT}
+          fill={color.white}
+          easing={Konva.Easings.ElasticEaseInOut}
+          strokeWidth={1}
+          stroke={color.darkGray}
+          cornerRadius={[NODE_CORNER_RADIUS, NODE_CORNER_RADIUS, 0, 0]}
+        />
 
-      <Rect
-        ref={rectRef}
-        width={NODE_WIDTH}
-        height={NODE_HEIGHT}
-        fill={color.white}
-        easing={Konva.Easings.ElasticEaseInOut}
-        strokeWidth={1}
-        stroke={color.darkGray}
-        cornerRadius={NODE_CORNER_RADIUS}
-      />
+        <Icon
+          iconType={iconType}
+          verticalAlign={'middle'}
+          horizontalAlign={'center'}
+        />
+      </Group>
 
-      <Icon
-        horizontalAlign={'center'}
-        verticalAlign={'center'}
-        iconType={iconType}
-      />
 
       {/* Bottom gray line */}
       <Rect
@@ -115,7 +146,7 @@ const Node = (props) => {
       />
 
       {/* 4 node anchors (circles) */}
-      {getNodeAnchors()}
+      {renderAnchors()}
 
       {/* Node label */}
       <Text
@@ -125,54 +156,10 @@ const Node = (props) => {
         fontFamily={NODE_LABEL_FONT_FAMILY}
         fill={color.black}
         width={NODE_WIDTH}
-        align='left'
+        align='center'
       />
     </Group>
   )
-}
-
-const getNodeAnchors = () => {
-  const anchors = []
-
-  for (let currentNodeSide = 1; currentNodeSide < 5; currentNodeSide++) {
-    let offsetX = 0
-    let offsetY = 0
-
-    if (currentNodeSide === 1) {
-      offsetX = getXCenterOfNode()
-      offsetY = 0
-    }
-
-    if (currentNodeSide === 2) {
-      offsetX = getXCenterOfNode()
-      offsetY = NODE_HEIGHT
-    }
-
-    if (currentNodeSide === 3) {
-      offsetX = NODE_WIDTH
-      offsetY = getYCenterOfNode()
-    }
-
-    if (currentNodeSide === 4) {
-      offsetX = 0
-      offsetY = getYCenterOfNode()
-    }
-
-    anchors.push(
-      <NodeAnchor
-        key={currentNodeSide}
-        x={offsetX}
-        y={offsetY}
-        width={NODE_ANCHOR_WIDTH}
-        height={NODE_ANCHOR_HEIGHT}
-        color={color.white}
-        borderColor={color.darkGray}
-        onClick
-      />
-    )
-  }
-
-  return anchors
 }
 
 const getXCenterOfNode = () => NODE_WIDTH / 2;

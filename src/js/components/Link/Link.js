@@ -1,12 +1,18 @@
 import React from 'react'
+import pt from 'prop-types'
 import { Line, Group } from 'react-konva'
 import { color } from 'Utils/color-helpers'
 import { formatPairsOfCoords, getArrowPointsCoordinates } from 'Utils/number-helpers'
 
 const Link = (props) => {
   const {
+    isTemporal,
     points
   } = props
+
+  if (points.length < 4) {
+    return null
+  }
 
   const coords = formatPairsOfCoords(points)
 
@@ -19,9 +25,9 @@ const Link = (props) => {
   const drawLine = (pointA, pointB) => (
     <Line
       points={[...pointA, ...pointB]}
-      stroke={color.black}
+      stroke={isTemporal ? color.black : color.alto}
       strokeWidth={1}
-      dash={[8, 5]}
+      dash={isTemporal ? [8, 5] : []}
     />
   )
 
@@ -35,3 +41,13 @@ const Link = (props) => {
 }
 
 export default Link
+
+Link.propTypes = {
+  points: pt.arrayOf(pt.number),
+  isTemporal: pt.bool
+}
+
+Link.defaultProps = {
+  points: [],
+  isTemporal: false
+}
